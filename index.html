@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecipeHouse - Culinary Inspiration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f9f7f7 0%, #f0f0f0 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+        }
+        .gradient-bg {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #ff6b6b;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .page-transition {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chatbot-toggle {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+        .nutrition-chart {
+            height: 200px;
+            width: 100%;
+        }
+        .consent-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.5s ease;
+        }
+        .consent-banner.active {
+            transform: translateY(0);
+        }
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Consent Banner -->
+    <div id="consentBanner" class="consent-banner bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-4 md:mb-0 md:mr-6">
+                <p class="text-sm md:text-base">We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies. <a href="#privacy" onclick="showPage('privacy')" class="underline hover:text-blue-300 transition-colors">Privacy Policy</a></p>
+            </div>
+            <div class="flex space-x-4">
+                <button id="acceptCookies" class="px-6 py-2 bg-green-500 hover:bg-green-600 rounded-full font-semibold transition-colors">Accept</button>
+                <button id="declineCookies" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-full font-semibold transition-colors">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                        <i class="fas fa-utensils text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">Recipe<span class="text-red-500">House</span></h1>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#home" onclick="showPage('home')" class="nav-link text-gray-700 hover:text-red-500 font-medium transition-colors">Home</a>
+                    <a href="#recipes" onclick="showPage('recipes')" class="nav-link text-gray-700 hover:text-red-500 font-medium transition-colors">Recipes</a>
+                    <a href="#books" onclick="showPage('books')" class="nav-link text-gray-700 hover:text-red-500 font-medium transition-colors">Books & Resources</a>
+                    <a href="#about" onclick="showPage('about')" class="nav-link text-gray-700 hover:text-red-500 font-medium transition-colors">About Us</a>
+                    <a href="#contact" onclick="showPage('contact')" class="nav-link text-gray-700 hover:text-red-500 font-medium transition-colors">Contact</a>
+                </nav>
+                
+                <!-- Search and Mobile Menu Toggle -->
+                <div class="flex items-center space-x-4">
+                    <div class="relative hidden md:block">
+                        <input type="text" id="searchInput" placeholder="Search recipes..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button id="mobileMenuToggle" class="md:hidden text-gray-700 text-2xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Search -->
+            <div class="mt-4 md:hidden">
+                <div class="relative">
+                    <input type="text" id="mobileSearchInput" placeholder="Search recipes..." class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu absolute top-full left-0 w-full bg-white shadow-lg md:hidden">
+            <div class="flex flex-col p-6 space-y-4">
+                <a href="#home" onclick="showPage('home'); closeMobileMenu()" class="text-gray-700 hover:text-red-500 font-medium text-lg py-2 border-b">Home</a>
+                <a href="#recipes" onclick="showPage('recipes'); closeMobileMenu()" class="text-gray-700 hover:text-red-500 font-medium text-lg py-2 border-b">Recipes</a>
+                <a href="#books" onclick="showPage('books'); closeMobileMenu()" class="text-gray-700 hover:text-red-500 font-medium text-lg py-2 border-b">Books & Resources</a>
+                <a href="#about" onclick="showPage('about'); closeMobileMenu()" class="text-gray-700 hover:text-red-500 font-medium text-lg py-2 border-b">About Us</a>
+                <a href="#contact" onclick="showPage('contact'); closeMobileMenu()" class="text-gray-700 hover:text-red-500 font-medium text-lg py-2 border-b">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Home Page -->
+        <section id="home" class="page-section active page-transition">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Discover Culinary Magic</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">AI-powered recipe inspiration for every meal, dietary need, and skill level. Start your culinary journey today!</p>
+            </div>
+            
+            <!-- Featured Recipes -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center">
+                    <span class="gradient-bg text-white px-4 py-1 rounded-full mr-3">AI Generated</span>
+                    Today's Featured Recipes
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Recipe cards will be generated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- AI Recipe Generator -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-16">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">AI Recipe Generator</h3>
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <input type="text" id="aiIngredient" placeholder="Enter main ingredient (e.g., chicken)" class="flex-grow px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <select id="aiDiet" class="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            <option value="">Any Diet</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="keto">Keto</option>
+                            <option value="gluten-free">Gluten-Free</option>
+                        </select>
+                        <button id="generateRecipe" class="px-8 py-3 gradient-bg text-white font-semibold rounded-full hover:opacity-90 transition-opacity">Generate Recipe</button>
+                    </div>
+                    <div id="aiRecipeResult" class="bg-white rounded-2xl p-6 shadow-md hidden">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4">Your AI-Generated Recipe</h4>
+                        <div id="aiRecipeContent"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Recipes Page -->
+        <section id="recipes" class="page-section page-transition">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">All Recipes</h2>
+                <p class="text-gray-600">Browse our collection of delicious recipes</p>
+            </div>
+            
+            <!-- Filter and Sort -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <div class="w-full md:w-auto">
+                        <input type="text" id="recipeSearch" placeholder="Search recipes by name or ingredient..." class="w-full md:w-96 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    </div>
+                    <div class="flex space-x-4">
+                        <select id="sortRecipes" class="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="calories-low">Calories: Low to High</option>
+                            <option value="calories-high">Calories: High to Low</option>
+                        </select>
+                        <select id="filterCategory" class="px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            <option value="all">All Categories</option>
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="dessert">Dessert</option>
+                            <option value="snack">Snack</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recipes Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="recipesGrid">
+                <!-- Recipe cards will be loaded here -->
+            </div>
+        </section>
+        
+        <!-- Books & Resources Page -->
+        <section id="books" class="page-section page-transition">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Books & Resources</h2>
+                <p class="text-gray-600">Curated materials for cooking and nutrition education</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Recommended Books</h3>
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+                            <div class="flex items-start">
+                                <div class="w-20 h-28 gradient-bg rounded-lg flex items-center justify-center mr-6">
+                                    <i class="fas fa-book text-white text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-800 mb-2">The Science of Cooking</h4>
+                                    <p class="text-gray-600 mb-3">Understand the chemistry behind great cooking with this comprehensive guide.</p>
+                                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Nutrition Science</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+                            <div class="flex items-start">
+                                <div class="w-20 h-28 gradient-bg rounded-lg flex items-center justify-center mr-6">
+                                    <i class="fas fa-book text-white text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-800 mb-2">Plant-Based Revolution</h4>
+                                    <p class="text-gray-600 mb-3">200+ delicious vegan recipes with complete nutritional information.</p>
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Vegan Cooking</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+                            <div class="flex items-start">
+                                <div class="w-20 h-28 gradient-bg rounded-lg flex items-center justify-center mr-6">
+                                    <i class="fas fa-book text-white text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-800 mb-2">Global Kitchen Explorer</h4>
+                                    <p class="text-gray-600 mb-3">Authentic recipes from 50 countries with cultural context and cooking techniques.</p>
+                                    <span class="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">World Cuisine</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Online Resources</h3>
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 h-full">
+                        <div class="mb-8">
+                            <h4 class="text-xl font-bold text-gray-800 mb-4">Nutrition Calculators</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <i class="fas fa-weight text-blue-500 text-2xl mb-2"></i>
+                                    <p class="font-medium">BMI Calculator</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <i class="fas fa-fire text-red-500 text-2xl mb-2"></i>
+                                    <p class="font-medium">Calorie Counter</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <i class="fas fa-apple-alt text-green-500 text-2xl mb-2"></i>
+                                    <p class="font-medium">Macro Tracker</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <i class="fas fa-clock text-yellow-500 text-2xl mb-2"></i>
+                                    <p class="font-medium">Meal Planner</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800 mb-4">Cooking Tutorials</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <i class="fas fa-play-circle text-red-500 mr-3"></i>
+                                    <span>Knife Skills Masterclass</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-play-circle text-red-500 mr-3"></i>
+                                    <span>Baking Fundamentals</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-play-circle text-red-500 mr-3"></i>
+                                    <span>Healthy Meal Prep Guide</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-play-circle text-red-500 mr-3"></i>
+                                    <span>International Cooking Techniques</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- About Us Page -->
+        <section id="about" class="page-section page-transition">
+            <div class="mb-12 text-center">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">About RecipeHouse</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Bringing the future of cooking to your kitchen with AI-powered recipe innovation.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Our Story</h3>
+                    <p class="text-gray-700 mb-6">Founded in 2023, RecipeHouse was born from a simple idea: what if technology could make cooking more creative, accessible, and personalized? We combine culinary expertise with artificial intelligence to generate unique recipes tailored to your preferences, dietary needs, and skill level.</p>
+                    <p class="text-gray-700 mb-6">Our mission is to democratize gourmet cooking and make healthy, delicious meals achievable for everyone. Whether you're a beginner or a seasoned chef, RecipeHouse adapts to your culinary journey.</p>
+                    <div class="flex items-center space-x-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold gradient-text gradient-bg bg-clip-text text-transparent">10K+</div>
+                            <div class="text-gray-600">Recipes Generated</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold gradient-text gradient-bg bg-clip-text text-transparent">50+</div>
+                            <div class="text-gray-600">Cuisine Types</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold gradient-text gradient-bg bg-clip-text text-transparent">15</div>
+                            <div class="text-gray-600">Dietary Categories</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-gradient-to-br from-red-100 to-pink-100 rounded-2xl p-8 h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-robot text-6xl text-gray-800 mb-6"></i>
+                            <h4 class="text-2xl font-bold text-gray-800 mb-4">AI-Assisted Cooking</h4>
+                            <p class="text-gray-700">Our proprietary AI analyzes thousands of recipes, flavor profiles, and nutritional data to create unique, delicious combinations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Our Values</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-heart text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3">Health-First Approach</h4>
+                        <p>Every recipe includes nutritional analysis and healthy alternatives.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-lightbulb text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3">Endless Creativity</h4>
+                        <p>AI-generated combinations you won't find anywhere else.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-users text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3">Community Driven</h4>
+                        <p>Real cooks, real feedback, continuously improving our AI.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Contact Us Page -->
+        <section id="contact" class="page-section page-transition">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Contact Us</h2>
+                <p class="text-gray-600">We'd love to hear from you! Send us your questions, feedback, or partnership inquiries.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <div class="bg-white rounded-2xl p-8 shadow-sm">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Send a Message</h3>
+                        <form id="contactForm">
+                            <div class="mb-6">
+                                <label for="name" class="block text-gray-700 mb-2">Full Name</label>
+                                <input type="text" id="name" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            </div>
+                            <div class="mb-6">
+                                <label for="email" class="block text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="email" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            </div>
+                            <div class="mb-6">
+                                <label for="subject" class="block text-gray-700 mb-2">Subject</label>
+                                <select id="subject" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="general">General Inquiry</option>
+                                    <option value="feedback">Recipe Feedback</option>
+                                    <option value="partnership">Partnership Opportunity</option>
+                                    <option value="technical">Technical Support</option>
+                                </select>
+                            </div>
+                            <div class="mb-6">
+                                <label for="message" class="block text-gray-700 mb-2">Message</label>
+                                <textarea id="message" rows="5" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-3 gradient-bg text-white font-semibold rounded-xl hover:opacity-90 transition-opacity">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Contact Information</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                                    <i class="fas fa-map-marker-alt text-red-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 mb-1">Our Location</h4>
+                                    <p class="text-gray-600">123 Culinary Street, Food District<br>San Francisco, CA 94107</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                    <i class="fas fa-phone text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 mb-1">Phone Number</h4>
+                                    <p class="text-gray-600">+1 (555) 123-4567<br>Monday - Friday, 9am - 6pm PST</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                                    <i class="fas fa-envelope text-green-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 mb-1">Email Address</h4>
+                                    <p class="text-gray-600">hello@recipehouse.com<br>support@recipehouse.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h3>
+                        <div class="space-y-4">
+                            <div class="border-b border-gray-200 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-2">Are the AI-generated recipes tested?</h4>
+                                <p class="text-gray-600">Yes! Our culinary team tests and refines every AI-generated recipe before publication.</p>
+                            </div>
+                            <div class="border-b border-gray-200 pb-4">
+                                <h4 class="font-bold text-gray-800 mb-2">Is RecipeHouse free to use?</h4>
+                                <p class="text-gray-600">Yes, our basic features are completely free. We offer premium features for advanced customization.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2">Can I submit my own recipes?</h4>
+                                <p class="text-gray-600">Absolutely! We welcome community contributions and will be launching this feature soon.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Privacy Policy Page (Hidden by default) -->
+        <section id="privacy" class="page-section page-transition">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Privacy Policy</h2>
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
+                    <p class="text-gray-700 mb-6">Last updated: March 15, 2024</p>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">Information We Collect</h3>
+                            <p class="text-gray-700">We collect information you provide directly to us, such as when you create an account, use our AI recipe generator, or contact us for support. This may include your name, email address, dietary preferences, and recipe interactions.</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">How We Use Your Information</h3>
+                            <p class="text-gray-700 mb-3">We use the information we collect to:</p>
+                            <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                                <li>Provide, maintain, and improve our services</li>
+                                <li>Personalize your experience and recipe recommendations</li>
+                                <li>Develop and improve our AI algorithms</li>
+                                <li>Communicate with you about products, services, and promotions</li>
+                                <li>Monitor and analyze trends, usage, and activities</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">Cookies and Similar Technologies</h3>
+                            <p class="text-gray-700">We use cookies and similar tracking technologies to track activity on our website and hold certain information. Cookies are files with a small amount of data which may include an anonymous unique identifier.</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">Your Choices</h3>
+                            <p class="text-gray-700">You can control cookies through your browser settings and other tools. You can also opt out of certain types of data collection and use. However, opting out may impact your experience with our services.</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-3">Contact Us</h3>
+                            <p class="text-gray-700">If you have any questions about this Privacy Policy, please contact us at privacy@recipehouse.com.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                            <i class="fas fa-utensils text-white text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">Recipe<span class="text-red-400">House</span></h2>
+                    </div>
+                    <p class="text-gray-400">AI-powered culinary inspiration for everyone. Making cooking creative, accessible, and personalized.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-6">Quick Links</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#home" onclick="showPage('home')" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="#recipes" onclick="showPage('recipes')" class="text-gray-400 hover:text-white transition-colors">Recipes</a></li>
+                        <li><a href="#books" onclick="showPage('books')" class="text-gray-400 hover:text-white transition-colors">Books & Resources</a></li>
+                        <li><a href="#about" onclick="showPage('about')" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-6">Legal</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#privacy" onclick="showPage('privacy')" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Accessibility Statement</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-6">Connect With Us</h3>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 hover:bg-red-500 flex items-center justify-center transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 hover:bg-red-500 flex items-center justify-center transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 hover:bg-red-500 flex items-center justify-center transition-colors">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 hover:bg-red-500 flex items-center justify-center transition-colors">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                    <p class="text-gray-400">Subscribe to our newsletter for weekly recipe inspiration!</p>
+                    <div class="mt-4 flex">
+                        <input type="email" placeholder="Your email" class="px-4 py-2 rounded-l-lg flex-grow text-gray-800 focus:outline-none">
+                        <button class="px-4 py-2 gradient-bg rounded-r-lg font-medium">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 RecipeHouse. All rights reserved. | This website uses AI-generated content and AI-assisted development tools.</p>
+                <p class="mt-2">RecipeHouse is committed to digital accessibility. <a href="#" class="underline hover:text-white">Report an accessibility issue</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chatbot -->
+    <div id="chatbotContainer" class="fixed bottom-6 right-6 z-40">
+        <div id="chatbotWindow" class="bg-white rounded-2xl shadow-2xl w-80 h-96 mb-4 hidden flex-col">
+            <div class="gradient-bg rounded-t-2xl p-4 flex justify-between items-center">
+                <h3 class="text-white font-bold">RecipeHouse Assistant</h3>
+                <button id="closeChatbot" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chatbotMessages" class="flex-grow p-4 overflow-y-auto">
+                <div class="mb-4">
+                    <div class="bg-gray-100 rounded-2xl rounded-bl-none p-3 max-w-xs">
+                        <p>Hello! I'm your RecipeHouse assistant. How can I help you today? You can ask me about recipes, cooking tips, or dietary advice.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t p-4">
+                <div class="flex">
+                    <input type="text" id="chatbotInput" placeholder="Type your message..." class="flex-grow px-4 py-2 rounded-l-full border focus:outline-none focus:ring-1 focus:ring-red-300">
+                    <button id="sendChatbotMessage" class="gradient-bg text-white px-4 py-2 rounded-r-full">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button id="chatbotToggle" class="w-14 h-14 gradient-bg rounded-full shadow-lg flex items-center justify-center text-white chatbot-toggle">
+            <i class="fas fa-robot text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-red-500 text-white px-4 py-2 rounded">Skip to main content</a>
+
+    <script>
+        // Recipe Data
+        const recipes = [
+            {
+                id: 1,
+                title: "Mediterranean Quinoa Bowl",
+                summary: "A protein-packed bowl with quinoa, roasted vegetables, and lemon-tahini dressing.",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "lunch",
+                calories: 420,
+                prepTime: "25 min",
+                benefits: "High in protein and fiber, rich in antioxidants",
+                nutrition: {
+                    protein: 18,
+                    carbs: 52,
+                    fat: 15,
+                    fiber: 12
+                },
+                aiGenerated: true
+            },
+            {
+                id: 2,
+                title: "Avocado Chocolate Mousse",
+                summary: "Creamy, decadent chocolate mousse made with avocado for a healthy twist.",
+                image: "https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "dessert",
+                calories: 280,
+                prepTime: "15 min",
+                benefits: "Heart-healthy fats, no refined sugar, vegan",
+                nutrition: {
+                    protein: 6,
+                    carbs: 22,
+                    fat: 20,
+                    fiber: 8
+                },
+                aiGenerated: true
+            },
+            {
+                id: 3,
+                title: "Turmeric Ginger Immunity Soup",
+                summary: "Warming soup with anti-inflammatory turmeric, ginger, and coconut milk.",
+                image: "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "dinner",
+                calories: 320,
+                prepTime: "35 min",
+                benefits: "Boosts immunity, anti-inflammatory, rich in antioxidants",
+                nutrition: {
+                    protein: 8,
+                    carbs: 28,
+                    fat: 22,
+                    fiber: 6
+                },
+                aiGenerated: false
+            },
+            {
+                id: 4,
+                title: "Berry Almond Overnight Oats",
+                summary: "Make-ahead breakfast with oats, almond milk, chia seeds, and mixed berries.",
+                image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "breakfast",
+                calories: 380,
+                prepTime: "10 min + overnight",
+                benefits: "High in fiber, omega-3s, and antioxidants",
+                nutrition: {
+                    protein: 14,
+                    carbs: 58,
+                    fat: 12,
+                    fiber: 14
+                },
+                aiGenerated: true
+            },
+            {
+                id: 5,
+                title: "Spicy Black Bean Tacos",
+                summary: "Flavorful plant-based tacos with spiced black beans and fresh avocado salsa.",
+                image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "dinner",
+                calories: 410,
+                prepTime: "20 min",
+                benefits: "High protein, plant-based, rich in iron",
+                nutrition: {
+                    protein: 22,
+                    carbs: 62,
+                    fat: 10,
+                    fiber: 18
+                },
+                aiGenerated: false
+            },
+            {
+                id: 6,
+                title: "Zucchini Noodles with Pesto",
+                summary: "Low-carb zucchini noodles tossed with fresh basil pesto and cherry tomatoes.",
+                image: "https://images.unsplash.com/photo-1598866594230-a7c12756260f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                category: "lunch",
+                calories: 290,
+                prepTime: "15 min",
+                benefits: "Low calorie, gluten-free, rich in vitamins",
+                nutrition: {
+                    protein: 9,
+                    carbs: 18,
+                    fat: 22,
+                    fiber: 7
+                },
+                aiGenerated: true
+            }
+        ];
+
+        // DOM Elements
+        let currentPage = 'home';
+        const chatbotResponses = [
+            "I can help you find recipes based on your dietary preferences. What type of cuisine are you interested in?",
+            "For meal prep tips, I recommend preparing ingredients in advance and using airtight containers for storage.",
+            "The Mediterranean Quinoa Bowl is one of our most popular recipes! It's high in protein and perfect for lunch.",
+            "Our AI recipe generator can create custom recipes based on ingredients you have on hand. Try it out!",
+            "Looking for healthy dessert options? Try our Avocado Chocolate Mousse - it's vegan and delicious!",
+            "You can filter recipes by category using the buttons on the recipes page."
+        ];
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show consent banner after delay
+            setTimeout(() => {
+                document.getElementById('consentBanner').classList.add('active');
+            }, 1000);
+            
+            // Load initial recipes
+            renderRecipeCards(recipes, '.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+            renderRecipeCards(recipes, '#recipesGrid');
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Set up nutrition charts for featured recipes
+            setTimeout(setupNutritionCharts, 500);
+            
+            // Accessibility: Set focus to main content when skip link is used
+            document.querySelector('a[href="#main-content"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('main').setAttribute('tabindex', '-1');
+                document.querySelector('main').focus();
+            });
+        });
+
+        // Show specific page
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            currentPage = pageId;
+            
+            // Update URL hash
+            window.location.hash = pageId;
+            
+            // Close mobile menu if open
+            closeMobileMenu();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Close mobile menu
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.remove('active');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+                document.getElementById('mobileMenu').classList.toggle('active');
+            });
+            
+            // Consent banner buttons
+            document.getElementById('acceptCookies').addEventListener('click', function() {
+                document.getElementById('consentBanner').classList.remove('active');
+                localStorage.setItem('recipehouse-cookies', 'accepted');
+            });
+            
+            document.getElementById('declineCookies').addEventListener('click', function() {
+                document.getElementById('consentBanner').classList.remove('active');
+                localStorage.setItem('recipehouse-cookies', 'declined');
+            });
+            
+            // Chatbot toggle
+            document.getElementById('chatbotToggle').addEventListener('click', function() {
+                const chatbotWindow = document.getElementById('chatbotWindow');
+                chatbotWindow.classList.toggle('hidden');
+                if (!chatbotWindow.classList.contains('hidden')) {
+                    document.getElementById('chatbotInput').focus();
+                }
+            });
+            
+            document.getElementById('closeChatbot').addEventListener('click', function() {
+                document.getElementById('chatbotWindow').classList.add('hidden');
+            });
+            
+            // Send chatbot message
+            document.getElementById('sendChatbotMessage').addEventListener('click', sendChatbotMessage);
+            document.getElementById('chatbotInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendChatbotMessage();
+            });
+            
+            // AI recipe generator
+            document.getElementById('generateRecipe').addEventListener('click', generateAIRecipe);
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', filterRecipes);
+            document.getElementById('mobileSearchInput').addEventListener('input', filterRecipes);
+            document.getElementById('recipeSearch').addEventListener('input', filterRecipes);
+            
+            // Sort and filter
+            document.getElementById('sortRecipes').addEventListener('change', sortRecipes);
+            document.getElementById('filterCategory').addEventListener('change', filterRecipes);
+            
+            // Contact form
+            document.getElementById('contactForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Thank you for your message! We will get back to you soon.');
+                this.reset();
+            });
+            
+            // Keyboard navigation for accessibility
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeMobileMenu();
+                    document.getElementById('chatbotWindow').classList.add('hidden');
+                }
+            });
+            
+            // Check if cookies were already accepted
+            if (localStorage.getItem('recipehouse-cookies') === 'accepted') {
+                document.getElementById('consentBanner').classList.remove('active');
+            }
+        }
+
+        // Render recipe cards
+        function renderRecipeCards(recipesArray, containerSelector) {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            recipesArray.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl overflow-hidden shadow-md card-hover';
+                card.innerHTML = `
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${recipe.image}" alt="${recipe.title}" class="w-full h-full object-cover">
+                        ${recipe.aiGenerated ? '<div class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">AI Generated</div>' : ''}
+                        <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">${recipe.category}</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">${recipe.title}</h3>
+                        <p class="text-gray-600 mb-4">${recipe.summary}</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center text-gray-700">
+                                <i class="fas fa-fire text-red-400 mr-2"></i>
+                                <span>${recipe.calories} cal</span>
+                            </div>
+                            <div class="flex items-center text-gray-700">
+                                <i class="fas fa-clock text-blue-400 mr-2"></i>
+                                <span>${recipe.prepTime}</span>
+                            </div>
+                        </div>
+                        <div class="nutrition-chart-container mb-4" data-recipe-id="${recipe.id}">
+                            <canvas class="nutrition-chart" id="nutritionChart-${recipe.id}"></canvas>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3">
+                            <p class="text-sm text-gray-700"><i class="fas fa-heart text-red-400 mr-2"></i>${recipe.benefits}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            // Setup nutrition charts after cards are rendered
+            setTimeout(setupNutritionCharts, 100);
+        }
+
+        // Setup nutrition charts
+        function setupNutritionCharts() {
+            recipes.forEach(recipe => {
+                const canvas = document.getElementById(`nutritionChart-${recipe.id}`);
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Protein', 'Carbs', 'Fat', 'Fiber'],
+                        datasets: [{
+                            data: [recipe.nutrition.protein, recipe.nutrition.carbs, recipe.nutrition.fat, recipe.nutrition.fiber],
+                            backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label || ''}: ${context.raw}g`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { display: false },
+                                grid: { display: false }
+                            },
+                            x: {
+                                ticks: { 
+                                    font: { size: 10 },
+                                    color: '#666'
+                                },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // Filter recipes based on search and category
+        function filterRecipes() {
+            const searchTerm = document.getElementById('recipeSearch')?.value.toLowerCase() || 
+                              document.getElementById('searchInput')?.value.toLowerCase() || 
+                              document.getElementById('mobileSearchInput')?.value.toLowerCase() || '';
+            
+            const categoryFilter = document.getElementById('filterCategory')?.value || 'all';
+            
+            let filtered = recipes.filter(recipe => {
+                const matchesSearch = recipe.title.toLowerCase().includes(searchTerm) || 
+                                     recipe.summary.toLowerCase().includes(searchTerm) ||
+                                     recipe.benefits.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = categoryFilter === 'all' || recipe.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            // Apply sorting if on recipes page
+            if (currentPage === 'recipes') {
+                const sortValue = document.getElementById('sortRecipes').value;
+                filtered = sortRecipeArray(filtered, sortValue);
+            }
+            
+            // Render filtered recipes
+            if (currentPage === 'home') {
+                renderRecipeCards(filtered.slice(0, 3), '.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+            } else if (currentPage === 'recipes') {
+                renderRecipeCards(filtered, '#recipesGrid');
+            }
+        }
+
+        // Sort recipes
+        function sortRecipes() {
+            const sortValue = document.getElementById('sortRecipes').value;
+            const filtered = sortRecipeArray(recipes, sortValue);
+            renderRecipeCards(filtered, '#recipesGrid');
+        }
+
+        // Sort recipe array
+        function sortRecipeArray(recipeArray, sortValue) {
+            const sorted = [...recipeArray];
+            
+            switch(sortValue) {
+                case 'newest':
+                    sorted.sort((a, b) => b.id - a.id);
+                    break;
+                case 'oldest':
+                    sorted.sort((a, b) => a.id - b.id);
+                    break;
+                case 'calories-low':
+                    sorted.sort((a, b) => a.calories - b.calories);
+                    break;
+                case 'calories-high':
+                    sorted.sort((a, b) => b.calories - a.calories);
+                    break;
+            }
+            
+            return sorted;
+        }
+
+        // Generate AI recipe
+        function generateAIRecipe() {
+            const ingredient = document.getElementById('aiIngredient').value;
+            const diet = document.getElementById('aiDiet').value;
+            
+            if (!ingredient) {
+                alert('Please enter an ingredient to generate a recipe!');
+                return;
+            }
+            
+            // Simulate AI processing
+            const aiRecipeContent = document.getElementById('aiRecipeContent');
+            const aiRecipeResult = document.getElementById('aiRecipeResult');
+            
+            aiRecipeContent.innerHTML = `
+                <div class="animate-pulse">
+                    <p class="text-gray-600">Generating recipe with ${ingredient}${diet ? ` for ${diet} diet` : ''}...</p>
+                </div>
+            `;
+            
+            aiRecipeResult.classList.remove('hidden');
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                const recipeName = `${ingredient.charAt(0).toUpperCase() + ingredient.slice(1)} ${diet ? diet.charAt(0).toUpperCase() + diet.slice(1) : 'Fusion'} Bowl`;
+                const prepTime = Math.floor(Math.random() * 20) + 15;
+                const calories = Math.floor(Math.random() * 300) + 250;
+                
+                aiRecipeContent.innerHTML = `
+                    <h5 class="font-bold text-lg text-gray-800 mb-2">${recipeName}</h5>
+                    <p class="text-gray-700 mb-4">An AI-generated recipe combining ${ingredient} with complementary flavors and ingredients${diet ? `, optimized for ${diet} dietary requirements` : ''}.</p>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-sm text-gray-600">Prep Time</div>
+                            <div class="font-bold">${prepTime} minutes</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-sm text-gray-600">Calories</div>
+                            <div class="font-bold">${calories} per serving</div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h6 class="font-bold text-gray-800 mb-2">AI Cooking Tips:</h6>
+                        <ul class="text-sm text-gray-700 list-disc pl-4 space-y-1">
+                            <li>Marinate ${ingredient} for at least 30 minutes for maximum flavor</li>
+                            <li>Cook on medium heat to prevent burning</li>
+                            <li>Add fresh herbs at the end for bright flavor</li>
+                            ${diet === 'vegan' ? '<li>Use nutritional yeast for a cheesy flavor without dairy</li>' : ''}
+                            ${diet === 'keto' ? '<li>Replace grains with cauliflower rice for low-carb option</li>' : ''}
+                        </ul>
+                    </div>
+                    <button class="mt-4 w-full py-2 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save This Recipe
+                    </button>
+                `;
+                
+                // Smooth scroll to the result
+                aiRecipeResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 1500);
+        }
+
+        // Send chatbot message
+        function sendChatbotMessage() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'mb-4 flex justify-end';
+            userMessageDiv.innerHTML = `
+                <div class="bg-red-500 text-white rounded-2xl rounded-br-none p-3 max-w-xs">
+                    <p>${message}</p>
+                </div>
+            `;
+            messagesContainer.appendChild(userMessageDiv);
+            
+            // Clear input
+            input.value = '';
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Simulate AI response delay
+            setTimeout(() => {
+                // Get random response
+                const randomResponse = chatbotResponses[Math.floor(Math.random() * chatbotResponses.length)];
+                
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'mb-4';
+                botMessageDiv.innerHTML = `
+                    <div class="bg-gray-100 rounded-2xl rounded-bl-none p-3 max-w-xs">
+                        <p>${randomResponse}</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(botMessageDiv);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 800);
+        }
+
+        // Handle hash changes for direct page access
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash)) {
+                showPage(hash);
+            }
+        });
+
+        // Initial page load from hash
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            if (document.getElementById(hash)) {
+                showPage(hash);
+            }
+        }
+    </script>
+</body>
+</html>
